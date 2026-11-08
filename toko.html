@@ -17,7 +17,7 @@
     .daftar { max-width: 720px; margin: 24px auto; padding: 0 16px; }
     .daftar h2 { font-size: 16px; margin: 0 0 12px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-    .kartu { background: #fff; border: 1px solid #e5e8e6; border-radius: 14px; overflow: hidden; text-decoration: none; color: inherit; }
+    .kartu { background: #fff; border: 1px solid #e5e8e6; border-radius: 14px; overflow: hidden; color: inherit; }
     .kartu .gambar { height: 130px; background: #046a4f; display: flex; align-items: center; justify-content: center; }
     .kartu .gambar img { width: 100%; height: 100%; object-fit: cover; }
     .kartu .isi { padding: 10px; }
@@ -25,7 +25,11 @@
     .kartu .harga { color: #046a4f; font-weight: 700; font-size: 14px; margin-top: 4px; }
     .kartu .satuan { color: #6b7684; font-weight: 400; font-size: 11px; }
     .tag { font-size: 10px; color: #046a4f; background: #e0f5ef; border-radius: 8px; padding: 2px 6px; display: inline-block; margin-bottom: 4px; }
+    .sewa-btn { display: block; text-align: center; margin-top: 8px; background: #046a4f; color: #fff; text-decoration: none; font-size: 12px; font-weight: 700; padding: 7px; border-radius: 10px; }
     .kosong { color: #6b7684; font-size: 14px; text-align: center; padding: 20px; }
+    .ajakan { max-width: 720px; margin: 24px auto; padding: 16px; background: #046a4f; color: #fff; border-radius: 16px; text-align: center; }
+    .ajakan p { margin: 0 0 10px; font-weight: 700; font-size: 15px; }
+    .ajakan a { display: inline-block; background: #fff; color: #046a4f; text-decoration: none; font-weight: 700; font-size: 13px; padding: 9px 16px; border-radius: 12px; }
   </style>
 </head>
 <body>
@@ -36,6 +40,12 @@
     <div class="info" id="rating"></div>
     <div id="badge"></div>
   </div>
+
+  <div class="ajakan" id="ajakanAtas" hidden>
+    <p>Cari atau butuh barang sewaan?</p>
+    <a href="LINK_DOWNLOAD_APLIKASI" target="_blank" rel="noopener">Unduh RENTALL</a>
+  </div>
+
   <div class="pesan" id="pesan"></div>
 
   <div class="daftar" id="daftar" hidden>
@@ -44,9 +54,15 @@
     <div class="kosong" id="kosong" hidden>Belum ada barang yang aktif.</div>
   </div>
 
+  <div class="ajakan" id="ajakanBawah" hidden>
+    <p>Cari atau butuh barang sewaan? Unduh RENTALL, sewa lebih hemat.</p>
+    <a href="LINK_DOWNLOAD_APLIKASI" target="_blank" rel="noopener">Unduh RENTALL</a>
+  </div>
+
   <script>
     const SUPABASE_URL = 'https://xdzmysjfpwcpjdrwkksk.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhkem15c2pmcHdjcGpkcndra3NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzODE4MjgsImV4cCI6MjEwMzk1NzgyOH0.FR2EeoAnrYFjD4p12s-6CoDGg6FG6svgyyOqRfbsRBk';
+    const LINK_APLIKASI = 'LINK_DOWNLOAD_APLIKASI';
 
     const slug = decodeURIComponent(location.pathname.replace(/^\/t\//, '').replace(/\/$/, ''));
     const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
@@ -79,6 +95,7 @@
       if (t.foto_url) document.getElementById('foto').src = t.foto_url;
       if (t.banner_url) document.getElementById('banner').style.backgroundImage = `url(${t.banner_url})`;
       if (t.badge_terverifikasi) document.getElementById('badge').innerHTML = '<span class="badge">Terverifikasi</span>';
+      document.getElementById('ajakanAtas').hidden = false;
       await muatBarang();
     }
 
@@ -90,22 +107,24 @@
       const grid = document.getElementById('grid');
       if (!res.ok || !data.length) {
         document.getElementById('kosong').hidden = false;
-        return;
+      } else {
+        grid.innerHTML = data.map(b => {
+          const foto = (b.foto && b.foto[0])
+            ? `<img src="${escapeHtml(b.foto[0])}" alt="${escapeHtml(b.judul)}">`
+            : '';
+          const tag = b.jenis === 'paket' ? '<span class="tag">Paket</span><br>' : '';
+          return `<div class="kartu">
+            <div class="gambar">${foto}</div>
+            <div class="isi">
+              ${tag}
+              <div class="judul">${escapeHtml(b.judul)}</div>
+              <div class="harga">${rupiah(b.harga_sewa)} <span class="satuan">/${satuanLabel(b.satuan_harga)}</span></div>
+              <a class="sewa-btn" href="${escapeHtml(LINK_APLIKASI)}" target="_blank" rel="noopener">Sewa di aplikasi</a>
+            </div>
+          </div>`;
+        }).join('');
       }
-      grid.innerHTML = data.map(b => {
-        const foto = (b.foto && b.foto[0])
-          ? `<img src="${escapeHtml(b.foto[0])}" alt="${escapeHtml(b.judul)}">`
-          : '';
-        const tag = b.jenis === 'paket' ? '<span class="tag">Paket</span><br>' : '';
-        return `<div class="kartu">
-          <div class="gambar">${foto}</div>
-          <div class="isi">
-            ${tag}
-            <div class="judul">${escapeHtml(b.judul)}</div>
-            <div class="harga">${rupiah(b.harga_sewa)} <span class="satuan">/${satuanLabel(b.satuan_harga)}</span></div>
-          </div>
-        </div>`;
-      }).join('');
+      document.getElementById('ajakanBawah').hidden = false;
     }
 
     muatToko().catch(() => {
