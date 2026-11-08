@@ -52,11 +52,11 @@
       <div class="harga"><span id="harga"></span> <span class="satuan" id="satuan"></span></div>
       <div class="toko" id="tokoInfo"></div>
       <p class="deskripsi" id="deskripsi"></p>
-      <a class="tombol link-app" id="btnSewa" href="LINK_DOWNLOAD_APLIKASI" target="_blank" rel="noopener"></a>
+      <a class="tombol link-app" id="btnSewa" href="https://expo.dev/accounts/ayam24s-team/projects/rentall/builds/b08bf00a-de1c-49b1-bc82-944648cd31b6" target="_blank" rel="noopener"></a>
 
       <div class="ajakan">
         <p id="ajakanTeks"></p>
-        <a class="link-app" href="LINK_DOWNLOAD_APLIKASI" target="_blank" rel="noopener" id="ajakanBtn"></a>
+        <a class="link-app" href="https://expo.dev/accounts/ayam24s-team/projects/rentall/builds/b08bf00a-de1c-49b1-bc82-944648cd31b6" target="_blank" rel="noopener" id="ajakanBtn"></a>
       </div>
     </div>
 
@@ -76,26 +76,23 @@
         ajakan: 'Mau sewa barang ini atau menawarkan barangmu? Unduh RENTALL.',
         unduh: 'Unduh RENTALL', tidakTersedia: 'Barang ini sudah tidak tersedia.',
         alamatSalah: 'Alamat barang ini tidak ditemukan.', gagal: 'Gagal memuat barang. Coba lagi nanti.',
-        oleh: 'oleh', satuan: { jam: 'jam', hari: 'hari', bulan: 'bulan' }, locale: 'id-ID',
-        judulTitle: 'RENTALL'
+        oleh: 'oleh', satuan: { jam: 'jam', hari: 'hari', bulan: 'bulan' }, locale: 'id-ID'
       },
       en: {
         tag: 'Package', sewa: 'Rent in the app', kembali: '← Shop', serupa: 'Similar items',
         ajakan: 'Want to rent this item or offer your own? Download RENTALL.',
         unduh: 'Download RENTALL', tidakTersedia: 'This item is no longer available.',
         alamatSalah: 'This item address was not found.', gagal: 'Failed to load the item. Please try again later.',
-        oleh: 'by', satuan: { jam: 'hour', hari: 'day', bulan: 'month' }, locale: 'en-US',
-        judulTitle: 'RENTALL'
+        oleh: 'by', satuan: { jam: 'hour', hari: 'day', bulan: 'month' }, locale: 'en-US'
       }
     };
 
     let bahasa = (navigator.language || 'id').toLowerCase().startsWith('id') ? 'id' : 'en';
-    let tokoSlug = '';
     let barangAktif = null;
     let dataSerupa = [];
 
     const bagian = decodeURIComponent(location.pathname.replace(/^\/t\//, '').replace(/\/$/, '')).split('/');
-    tokoSlug = bagian[0] || '';
+    const tokoSlug = bagian[0] || '';
     const barangSegmen = bagian[1] || '';
 
     function slugify(s) {
@@ -152,7 +149,7 @@
       tag.textContent = t.tag;
       tag.hidden = b.jenis !== 'paket';
       document.getElementById('tokoInfo').innerHTML =
-        `${t.oleh} <a href="/t/${encodeURIComponent(b.toko_slug)}">${escapeHtml(b.toko_nama || tokoSlug)}</a>`;
+        `${t.oleh} <a href="/t/${encodeURIComponent(b.toko_slug)}">${escapeHtml(tokoSlug)}</a>`;
       document.getElementById('kembali').href = `/t/${encodeURIComponent(tokoSlug)}`;
       document.getElementById('konten').hidden = false;
     }
