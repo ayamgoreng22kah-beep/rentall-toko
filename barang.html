@@ -148,8 +148,9 @@
       const tag = document.getElementById('tag');
       tag.textContent = t.tag;
       tag.hidden = b.jenis !== 'paket';
+      const namaToko = b.toko_nama || b.toko_slug;
       document.getElementById('tokoInfo').innerHTML =
-        `${t.oleh} <a href="/t/${encodeURIComponent(b.toko_slug)}">${escapeHtml(tokoSlug)}</a>`;
+        `${t.oleh} <a href="/t/${encodeURIComponent(b.toko_slug)}">${escapeHtml(namaToko)}</a>`;
       document.getElementById('kembali').href = `/t/${encodeURIComponent(tokoSlug)}`;
       document.getElementById('konten').hidden = false;
     }
