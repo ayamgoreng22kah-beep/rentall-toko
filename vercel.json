@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/t/:slug/:barang", "destination": "/barang.html" },
     { "source": "/t/:slug", "destination": "/toko.html" }
   ]
