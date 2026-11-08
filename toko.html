@@ -7,6 +7,9 @@
   <meta name="description" content="Lihat toko sewa di RENTALL.">
   <style>
     body { font-family: sans-serif; margin: 0; background: #f4f5f7; color: #1f2937; }
+    .bahasa { position: fixed; top: 10px; right: 10px; z-index: 5; background: rgba(255,255,255,0.9); border-radius: 10px; padding: 3px; font-size: 12px; }
+    .bahasa button { border: 0; background: none; padding: 5px 9px; border-radius: 8px; cursor: pointer; color: #046a4f; font-weight: 700; }
+    .bahasa button.aktif { background: #046a4f; color: #fff; }
     .banner { height: 160px; background: #046a4f center/cover no-repeat; }
     .profil { text-align: center; margin-top: -48px; }
     .foto { width: 96px; height: 96px; border-radius: 50%; border: 4px solid #fff; background: #e0f5ef; object-fit: cover; }
@@ -33,30 +36,34 @@
   </style>
 </head>
 <body>
+  <div class="bahasa">
+    <button id="btnId" onclick="setBahasa('id')">ID</button><button id="btnEn" onclick="setBahasa('en')">EN</button>
+  </div>
+
   <div class="banner" id="banner"></div>
   <div class="profil">
     <img class="foto" id="foto" alt="">
-    <div class="nama" id="nama">Memuat...</div>
+    <div class="nama" id="nama">...</div>
     <div class="info" id="rating"></div>
     <div id="badge"></div>
   </div>
 
   <div class="ajakan" id="ajakanAtas" hidden>
-    <p>Cari atau butuh barang sewaan?</p>
-    <a href="LINK_DOWNLOAD_APLIKASI" target="_blank" rel="noopener">Unduh RENTALL</a>
+    <p data-i18n="ajakan">Cari atau butuh barang sewaan?</p>
+    <a class="link-app" href="LINK_DOWNLOAD_APLIKASI" target="_blank" rel="noopener" data-i18n="unduh">Unduh RENTALL</a>
   </div>
 
   <div class="pesan" id="pesan"></div>
 
   <div class="daftar" id="daftar" hidden>
-    <h2>Barang dan paket</h2>
+    <h2 data-i18n="judulBarang">Barang dan paket</h2>
     <div class="grid" id="grid"></div>
-    <div class="kosong" id="kosong" hidden>Belum ada barang yang aktif.</div>
+    <div class="kosong" id="kosong" hidden data-i18n="kosong">Belum ada barang yang aktif.</div>
   </div>
 
   <div class="ajakan" id="ajakanBawah" hidden>
-    <p>Cari atau butuh barang sewaan? Unduh RENTALL, sewa lebih hemat.</p>
-    <a href="LINK_DOWNLOAD_APLIKASI" target="_blank" rel="noopener">Unduh RENTALL</a>
+    <p data-i18n="ajakanBawah">Cari atau butuh barang sewaan? Unduh RENTALL, sewa lebih hemat.</p>
+    <a class="link-app" href="LINK_DOWNLOAD_APLIKASI" target="_blank" rel="noopener" data-i18n="unduh">Unduh RENTALL</a>
   </div>
 
   <script>
@@ -64,19 +71,99 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhkem15c2pmcHdjcGpkcndra3NrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzODE4MjgsImV4cCI6MjEwMzk1NzgyOH0.FR2EeoAnrYFjD4p12s-6CoDGg6FG6svgyyOqRfbsRBk';
     const LINK_APLIKASI = 'LINK_DOWNLOAD_APLIKASI';
 
+    const TEKS = {
+      id: {
+        ajakan: 'Cari atau butuh barang sewaan?',
+        ajakanBawah: 'Cari atau butuh barang sewaan? Unduh RENTALL, sewa lebih hemat.',
+        unduh: 'Unduh RENTALL',
+        judulBarang: 'Barang dan paket',
+        kosong: 'Belum ada barang yang aktif.',
+        sewa: 'Sewa di aplikasi',
+        paket: 'Paket',
+        terverifikasi: 'Terverifikasi',
+        tidakDitemukan: 'Toko tidak ditemukan',
+        alamatSalah: 'Alamat toko ini tidak tersedia.',
+        gagal: 'Gagal memuat toko. Coba lagi nanti.',
+        satuan: { jam: 'jam', hari: 'hari', bulan: 'bulan' },
+        locale: 'id-ID'
+      },
+      en: {
+        ajakan: 'Looking for or need rental items?',
+        ajakanBawah: 'Looking for or need rental items? Download RENTALL, rent smarter.',
+        unduh: 'Download RENTALL',
+        judulBarang: 'Items and packages',
+        kosong: 'No active items yet.',
+        sewa: 'Rent in the app',
+        paket: 'Package',
+        terverifikasi: 'Verified',
+        tidakDitemukan: 'Shop not found',
+        alamatSalah: 'This shop address is not available.',
+        gagal: 'Failed to load the shop. Please try again later.',
+        satuan: { jam: 'hour', hari: 'day', bulan: 'month' },
+        locale: 'en-US'
+      }
+    };
+
+    let bahasa = (navigator.language || 'id').toLowerCase().startsWith('id') ? 'id' : 'en';
+    let tokoAktif = null;
+    let barangAktif = null;
+
     const slug = decodeURIComponent(location.pathname.replace(/^\/t\//, '').replace(/\/$/, ''));
     const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
 
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
     function rupiah(n) {
-      return 'Rp' + Number(n).toLocaleString('id-ID');
+      return 'Rp' + Number(n).toLocaleString(TEKS[bahasa].locale);
     }
 
     function satuanLabel(s) {
-      return s === 'jam' ? 'jam' : s === 'bulan' ? 'bulan' : 'hari';
+      return TEKS[bahasa].satuan[s] || TEKS[bahasa].satuan.hari;
     }
 
-    function escapeHtml(s) {
-      return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    function terapkanBahasa() {
+      const t = TEKS[bahasa];
+      document.documentElement.lang = bahasa;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = t[el.dataset.i18n];
+      });
+      document.querySelectorAll('.link-app').forEach(el => { el.href = LINK_APLIKASI; });
+      document.getElementById('btnId').classList.toggle('aktif', bahasa === 'id');
+      document.getElementById('btnEn').classList.toggle('aktif', bahasa === 'en');
+      if (tokoAktif) {
+        document.title = `${tokoAktif.nama} - RENTALL`;
+        document.getElementById('badge').innerHTML = tokoAktif.badge_terverifikasi
+          ? `<span class="badge">${t.terverifikasi}</span>` : '';
+      }
+      if (barangAktif) tampilkanBarang(barangAktif);
+    }
+
+    function setBahasa(b) {
+      bahasa = b;
+      terapkanBahasa();
+    }
+
+    function tampilkanBarang(data) {
+      const t = TEKS[bahasa];
+      const grid = document.getElementById('grid');
+      document.getElementById('daftar').hidden = false;
+      document.getElementById('kosong').hidden = data.length > 0;
+      grid.innerHTML = data.map(b => {
+        const foto = (b.foto && b.foto[0])
+          ? `<img src="${escapeHtml(b.foto[0])}" alt="${escapeHtml(b.judul)}">` : '';
+        const tag = b.jenis === 'paket' ? `<span class="tag">${t.paket}</span><br>` : '';
+        return `<div class="kartu">
+          <div class="gambar">${foto}</div>
+          <div class="isi">
+            ${tag}
+            <div class="judul">${escapeHtml(b.judul)}</div>
+            <div class="harga">${rupiah(b.harga_sewa)} <span class="satuan">/${satuanLabel(b.satuan_harga)}</span></div>
+            <a class="sewa-btn link-app" href="${escapeHtml(LINK_APLIKASI)}" target="_blank" rel="noopener">${t.sewa}</a>
+          </div>
+        </div>`;
+      }).join('');
     }
 
     async function muatToko() {
@@ -84,18 +171,17 @@
       const res = await fetch(url, { headers });
       const data = await res.json();
       if (!res.ok || !data.length) {
-        document.getElementById('nama').textContent = 'Toko tidak ditemukan';
-        document.getElementById('pesan').textContent = 'Alamat toko ini tidak tersedia.';
+        document.getElementById('nama').textContent = TEKS[bahasa].tidakDitemukan;
+        document.getElementById('pesan').textContent = TEKS[bahasa].alamatSalah;
         return;
       }
-      const t = data[0];
-      document.title = `${t.nama} - RENTALL`;
-      document.getElementById('nama').textContent = t.nama;
-      document.getElementById('rating').textContent = `★ ${Number(t.rating_avg || 0).toFixed(1)}`;
-      if (t.foto_url) document.getElementById('foto').src = t.foto_url;
-      if (t.banner_url) document.getElementById('banner').style.backgroundImage = `url(${t.banner_url})`;
-      if (t.badge_terverifikasi) document.getElementById('badge').innerHTML = '<span class="badge">Terverifikasi</span>';
+      tokoAktif = data[0];
+      document.getElementById('nama').textContent = tokoAktif.nama;
+      document.getElementById('rating').textContent = `★ ${Number(tokoAktif.rating_avg || 0).toFixed(1)}`;
+      if (tokoAktif.foto_url) document.getElementById('foto').src = tokoAktif.foto_url;
+      if (tokoAktif.banner_url) document.getElementById('banner').style.backgroundImage = `url(${tokoAktif.banner_url})`;
       document.getElementById('ajakanAtas').hidden = false;
+      terapkanBahasa();
       await muatBarang();
     }
 
@@ -103,32 +189,14 @@
       const url = `${SUPABASE_URL}/rest/v1/barang_publik?toko_slug=eq.${encodeURIComponent(slug)}&select=*&order=created_at.desc`;
       const res = await fetch(url, { headers });
       const data = await res.json();
-      document.getElementById('daftar').hidden = false;
-      const grid = document.getElementById('grid');
-      if (!res.ok || !data.length) {
-        document.getElementById('kosong').hidden = false;
-      } else {
-        grid.innerHTML = data.map(b => {
-          const foto = (b.foto && b.foto[0])
-            ? `<img src="${escapeHtml(b.foto[0])}" alt="${escapeHtml(b.judul)}">`
-            : '';
-          const tag = b.jenis === 'paket' ? '<span class="tag">Paket</span><br>' : '';
-          return `<div class="kartu">
-            <div class="gambar">${foto}</div>
-            <div class="isi">
-              ${tag}
-              <div class="judul">${escapeHtml(b.judul)}</div>
-              <div class="harga">${rupiah(b.harga_sewa)} <span class="satuan">/${satuanLabel(b.satuan_harga)}</span></div>
-              <a class="sewa-btn" href="${escapeHtml(LINK_APLIKASI)}" target="_blank" rel="noopener">Sewa di aplikasi</a>
-            </div>
-          </div>`;
-        }).join('');
-      }
+      barangAktif = res.ok ? data : [];
+      tampilkanBarang(barangAktif);
       document.getElementById('ajakanBawah').hidden = false;
     }
 
+    terapkanBahasa();
     muatToko().catch(() => {
-      document.getElementById('pesan').textContent = 'Gagal memuat toko. Coba lagi nanti.';
+      document.getElementById('pesan').textContent = TEKS[bahasa].gagal;
     });
   </script>
 </body>
